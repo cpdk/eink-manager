@@ -34,6 +34,7 @@ jobs:
           # Build using Docker with specific platform
           docker buildx build \
             --platform linux/arm64 \
+            --build-arg TARGETPLATFORM=linux/arm64 \
             --file Dockerfile.arm64 \
             --output type=tar,dest=dist/build.tar \
             .
