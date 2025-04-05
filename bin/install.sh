@@ -51,12 +51,16 @@ chmod +x $APP_DIR/bin/start.sh
 # Initial installation of dependencies
 echo "Installing API dependencies..."
 cd $APP_DIR/api
+export NODE_OPTIONS="--max-old-space-size=512"
 npm ci
 
 echo "Installing UI dependencies and building..."
 cd $APP_DIR/ui
 npm ci
-npm run build
+# Increase memory limit for Angular build and disable analytics
+export NODE_OPTIONS="--max-old-space-size=512"
+npx ng analytics off
+npm run build -- --configuration production --aot --build-optimizer=false
 
 # Create systemd service
 echo "Creating systemd service..."
@@ -69,6 +73,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=${APP_DIR}
+Environment=NODE_OPTIONS=--max-old-space-size=512
 ExecStart=/bin/bash ${APP_DIR}/bin/start.sh
 Restart=always
 RestartSec=10

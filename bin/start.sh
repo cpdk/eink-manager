@@ -4,6 +4,9 @@
 APP_DIR="/opt/eink"
 LOG_FILE="/var/log/eink.log"
 
+# Set Node.js memory limit
+export NODE_OPTIONS="--max-old-space-size=512"
+
 # Function to log messages
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
@@ -34,7 +37,7 @@ log "Updating UI dependencies..."
 cd $APP_DIR/ui
 if npm ci >> "$LOG_FILE" 2>&1; then
     log "UI dependencies updated successfully"
-    if npm run build >> "$LOG_FILE" 2>&1; then
+    if npm run build -- --configuration production --aot --build-optimizer=false >> "$LOG_FILE" 2>&1; then
         log "UI built successfully"
     else
         log "UI build failed, continuing with existing build"
