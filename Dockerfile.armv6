@@ -8,22 +8,30 @@ RUN dpkg --add-architecture armhf && \
     python3-venv \
     build-essential \
     pkg-config \
-    libpixman-1-dev \
-    libcairo2-dev \
-    libpango1.0-dev \
-    libjpeg-dev \
-    libgif-dev \
-    librsvg2-dev \
+    libpixman-1-dev:armhf \
+    libcairo2-dev:armhf \
+    libpango1.0-dev:armhf \
+    libjpeg-dev:armhf \
+    libgif-dev:armhf \
+    librsvg2-dev:armhf \
     git \
-    gcc \
-    g++ \
+    gcc-arm-linux-gnueabihf \
+    g++-arm-linux-gnueabihf \
     make \
     python3-pip \
     python3-numpy \
     python3-pillow \
-    libtiff-dev \
-    libatlas-base-dev \
+    libtiff-dev:armhf \
+    libatlas-base-dev:armhf \
     && rm -rf /var/lib/apt/lists/*
+
+# Set up for arm cross compilation
+ENV ARCH=arm
+ENV CROSS_COMPILE=arm-linux-gnueabihf-
+ENV CC=arm-linux-gnueabihf-gcc
+ENV CXX=arm-linux-gnueabihf-g++
+ENV QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf
+ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
 
 # Set up Python virtual environment
 RUN python3 -m venv /opt/venv
@@ -36,13 +44,6 @@ RUN pip3 install --no-cache-dir \
     pillow \
     numpy
 
-# Set up for arm cross compilation
-ENV ARCH=arm
-ENV CROSS_COMPILE=arm-linux-gnueabihf-
-ENV CC=arm-linux-gnueabihf-gcc
-ENV CXX=arm-linux-gnueabihf-g++
-ENV QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf
-
 WORKDIR /app
 
 # Copy package files
@@ -53,14 +54,16 @@ COPY ui/package*.json ui/
 WORKDIR /app/api
 RUN npm ci --target_arch=arm --target_platform=linux --target_libc=glibc --ignore-scripts
 
-# Install and build canvas separately
-RUN apt-get update && apt-get install -y \
-    libcairo2-dev \
-    libpango1.0-dev \
-    libjpeg-dev \
-    libgif-dev \
-    librsvg2-dev \
-    && npm install canvas@2.11.2 --target_arch=arm --target_platform=linux --build-from-source
+# Install and build canvas separately with proper flags
+RUN npm install canvas@2.11.2 --target_arch=arm --target_platform=linux --target_libc=glibc --build-from-source \
+    --canvas_binary_host_mirror=https://github.com/Automattic/node-canvas/releases/download/ \
+    && cd node_modules/canvas && \
+    node-gyp rebuild --target_arch=arm --target_platform=linux --target_libc=glibc \
+        --arch=arm \
+        --target_arch=arm \
+        --arm_version=6 \
+        --arm_float_abi=hard \
+        --arm_fpu=vfp
 
 WORKDIR /app/ui
 RUN npm ci
@@ -104,11 +107,11 @@ apt-get install -y \
     python3-pillow \
     libtiff-dev \
     libatlas-base-dev \
-    libcairo2-dev \
-    libpango1.0-dev \
-    libjpeg-dev \
-    libgif-dev \
-    librsvg2-dev\n\
+    libcairo2 \
+    libpango1.0-0 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2\n\
 \n\
 # Set up Python virtual environment\n\
 python3 -m venv /opt/eink-venv\n\
