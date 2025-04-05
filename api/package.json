@@ -1,5 +1,5 @@
 {
-  "name": "inky-pi-api",
+  "name": "eink-api",
   "version": "1.0.0",
   "description": "API for InkyPi e-ink display",
   "main": "dist/server.js",
