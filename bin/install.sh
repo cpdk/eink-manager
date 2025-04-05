@@ -32,12 +32,14 @@ mkdir -p $APP_DIR
 echo "Copying application files..."
 cp -r . $APP_DIR/
 
-# Install API dependencies
+# Make start script executable
+chmod +x $APP_DIR/bin/start.sh
+
+# Initial installation of dependencies
 echo "Installing API dependencies..."
 cd $APP_DIR/api
 npm ci
 
-# Install UI dependencies and build
 echo "Installing UI dependencies and building..."
 cd $APP_DIR/ui
 npm ci
@@ -53,8 +55,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=${APP_DIR}/api
-ExecStart=/usr/bin/node dist/server.js
+WorkingDirectory=${APP_DIR}
+ExecStart=/bin/bash ${APP_DIR}/bin/start.sh
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
@@ -63,6 +65,10 @@ Environment=PORT=3000
 [Install]
 WantedBy=multi-user.target
 EOL
+
+# Create log file and set permissions
+touch /var/log/eink.log
+chmod 644 /var/log/eink.log
 
 # Reload systemd
 echo "Reloading systemd..."
@@ -75,4 +81,5 @@ systemctl start ${SERVICE_NAME}
 
 echo "Installation complete!"
 echo "The service is now running at http://localhost:3000"
-echo "You can check the service status with: systemctl status ${SERVICE_NAME}" 
+echo "You can check the service status with: systemctl status ${SERVICE_NAME}"
+echo "View logs with: tail -f /var/log/eink.log" 
