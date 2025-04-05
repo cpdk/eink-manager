@@ -24,6 +24,19 @@ if ! command -v node &> /dev/null; then
     apt-get install -y nodejs
 fi
 
+# Install Canvas dependencies
+echo "Installing Canvas dependencies..."
+apt-get update
+apt-get install -y \
+    build-essential \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    pkg-config \
+    python3
+
 # Create application directory
 echo "Creating application directory..."
 mkdir -p $APP_DIR
