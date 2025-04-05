@@ -2,8 +2,11 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -31,6 +34,12 @@ jobs:
           key: ${{ runner.os }}-api-${{ hashFiles('api/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-api-
+
+      - name: Get version
+        id: package_version
+        run: |
+          VERSION=$(node -p "require('./api/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build UI
         working-directory: ui
@@ -77,14 +86,15 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: eink-release.tar.gz
-          name: Release ${{ github.ref_name }}
+          name: Release v${{ steps.package_version.outputs.version }}
+          tag_name: v${{ steps.package_version.outputs.version }}
           body: |
-            E-ink Display Service Release ${{ github.ref_name }}
+            E-ink Display Service Release v${{ steps.package_version.outputs.version }}
             
             ### Installation
             ```bash
             # Download and extract
-            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/eink-release.tar.gz
+            wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.package_version.outputs.version }}/eink-release.tar.gz
             tar xzf eink-release.tar.gz
             
             # Install
