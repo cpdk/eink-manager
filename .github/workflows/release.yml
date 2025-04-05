@@ -15,7 +15,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: Cache UI dependencies
+        uses: actions/cache@v3
+        with:
+          path: ui/node_modules
+          key: ${{ runner.os }}-ui-${{ hashFiles('ui/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ui-
+
+      - name: Cache API dependencies
+        uses: actions/cache@v3
+        with:
+          path: api/node_modules
+          key: ${{ runner.os }}-api-${{ hashFiles('api/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-api-
 
       - name: Build UI
         working-directory: ui
