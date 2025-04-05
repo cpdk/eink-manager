@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2018",
+    "lib": [ "ES2018", "dom" ],
+    "moduleResolution": "node",
+    "rootDir": "./src/",
+    "outDir": "./dist/",
+    "sourceRoot": "./src",
+    "sourceMap": true,
+    "allowJs": false,
+    "declaration": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "noImplicitThis": true,
+    "strictNullChecks": false,
+    "noImplicitReturns": false,
+    "preserveConstEnums": true,
+    "forceConsistentCasingInFileNames": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "mapRoot": "dist",
+    "allowSyntheticDefaultImports"  : true,
+    
+  },
+  "exclude": [ "node_modules", "build", "webpack", "dist", "generate-section-index.ts", "generate-consumption-group-index.ts" ],
+  "types": [ "typePatches" ]
+}

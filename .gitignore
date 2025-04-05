@@ -1,0 +1,12 @@
+python/
+.idea/
+api/node_modules/
+api/logs/
+api/config/
+ui/node_modules/
+temp/
+.DS_Store
+ui/.angular/
+ui/dist/
+ui/node_modules/
+

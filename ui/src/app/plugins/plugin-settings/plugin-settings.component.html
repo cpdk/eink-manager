@@ -1,0 +1,108 @@
+<div class="plugin-settings-container">
+  <div class="header">
+    <button mat-icon-button class="back-button" (click)="goBack()" aria-label="Go back">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>{{plugin?.displayName}} Settings</h2>
+  </div>
+
+  <div class="plugin-status">
+    <span class="version">v{{plugin?.version}}</span>
+    <button class="toggle-button" [class.enabled]="plugin?.enabled" (click)="togglePlugin()">
+      {{plugin?.enabled ? 'Disable' : 'Enable'}}
+    </button>
+  </div>
+
+  <p class="description">{{plugin?.description}}</p>
+
+  <div class="settings-section" *ngIf="plugin">
+    <h3>Schedule</h3>
+    <mat-form-field class="full-width">
+      <mat-label>Cron Expression</mat-label>
+      <input matInput [(ngModel)]="plugin.schedule" (ngModelChange)="onScheduleChange()">
+      <mat-hint>Use cron syntax (e.g., "*/5 * * * *" for every 5 minutes)</mat-hint>
+    </mat-form-field>
+
+    <h3>Settings</h3>
+    <div class="settings-form">
+      <ng-container *ngFor="let setting of plugin.settingsSchema">
+        <!-- Location Picker -->
+        <div *ngIf="setting.type === 'location'" class="setting-item">
+          <label>{{setting.label}}</label>
+          <div class="location-picker">
+            <div #mapContainer class="map-container">
+              <div class="map"></div>
+            </div>
+            <div class="location-display" *ngIf="plugin.settings[setting.key]">
+              <div class="location-name">
+                <mat-form-field class="full-width">
+                  <mat-label>Location Name</mat-label>
+                  <input matInput
+                         [(ngModel)]="plugin.settings[setting.key].customName"
+                         (ngModelChange)="onSettingChange()"
+                         [placeholder]="plugin.settings[setting.key].displayName">
+                  <mat-hint>Leave empty to use the default name: {{plugin.settings[setting.key].displayName}}</mat-hint>
+                </mat-form-field>
+              </div>
+              <p class="coordinates">Coordinates: {{plugin.settings[setting.key].lat | number:'1.6-6'}}, {{plugin.settings[setting.key].lon | number:'1.6-6'}}</p>
+            </div>
+          </div>
+          <mat-hint *ngIf="setting.description">{{setting.description}}</mat-hint>
+        </div>
+
+        <!-- Boolean Toggle -->
+        <mat-slide-toggle *ngIf="setting.type === 'boolean'"
+                        [(ngModel)]="plugin.settings[setting.key]"
+                        (change)="onSettingChange()"
+                        class="setting-item">
+          {{setting.label}}
+          <mat-hint *ngIf="setting.description">{{setting.description}}</mat-hint>
+        </mat-slide-toggle>
+
+        <!-- String Input -->
+        <mat-form-field *ngIf="setting.type === 'string'"
+                      class="setting-item full-width">
+          <mat-label>{{setting.label}}</mat-label>
+          <input matInput
+                 [(ngModel)]="plugin.settings[setting.key]"
+                 (change)="onSettingChange()"
+                 [required]="setting.validation?.required ?? false">
+          <mat-hint *ngIf="setting.description">{{setting.description}}</mat-hint>
+        </mat-form-field>
+
+        <!-- Number Input -->
+        <mat-form-field *ngIf="setting.type === 'number'"
+                      class="setting-item full-width">
+          <mat-label>{{setting.label}}</mat-label>
+          <input matInput
+                 type="number"
+                 [(ngModel)]="plugin.settings[setting.key]"
+                 (change)="onSettingChange()"
+                 [min]="setting.validation?.min ?? null"
+                 [max]="setting.validation?.max ?? null"
+                 [required]="setting.validation?.required ?? false">
+          <mat-hint *ngIf="setting.description">{{setting.description}}</mat-hint>
+        </mat-form-field>
+
+        <!-- Select Dropdown -->
+        <mat-form-field *ngIf="setting.type === 'select'"
+                      class="setting-item full-width">
+          <mat-label>{{setting.label}}</mat-label>
+          <mat-select [(ngModel)]="plugin.settings[setting.key]"
+                     (selectionChange)="onSettingChange()">
+            <mat-option *ngFor="let option of setting.options"
+                       [value]="option.value">
+              {{option.label}}
+            </mat-option>
+          </mat-select>
+          <mat-hint *ngIf="setting.description">{{setting.description}}</mat-hint>
+        </mat-form-field>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button mat-button (click)="resetSettings()">Reset</button>
+    <button mat-raised-button color="primary" (click)="saveSettings()">Save</button>
+  </div>
+</div> 

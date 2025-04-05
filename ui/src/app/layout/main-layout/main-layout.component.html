@@ -1,0 +1,30 @@
+<div class="frame">
+  <!-- Header -->
+  <header class="header">
+    <h1>{{ deviceName }}</h1>
+    <div class="header-actions">
+      <button class="icon-button" title="Update Display Now" (click)="updateDisplay()" [disabled]="isUpdating">
+        <i class="fas" [class.fa-sync]="!isUpdating" [class.fa-sync-alt]="isUpdating" [class.fa-spin]="isUpdating"></i>
+      </button>
+      <button class="icon-button" title="Clear Display" (click)="clearDisplay()" [disabled]="isUpdating">
+        <i class="fas fa-times"></i>
+      </button>
+      <button class="icon-button" title="Settings" (click)="openSettings()" [disabled]="isUpdating">
+        <i class="fas fa-cog"></i>
+      </button>
+    </div>
+  </header>
+
+  
+  <div class="content">
+    <app-plugin-list *ngIf="!isPluginSettingsRoute()"></app-plugin-list>
+    <router-outlet></router-outlet>
+  </div>
+  
+  <!-- Separator -->
+  <div class="separator"></div>
+  <!-- Current Display Preview -->
+  <div class="preview-container">
+    <img [src]="currentDisplayImage" alt="Current Display" class="preview-image">
+  </div>
+</div> 

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 800px;
+        height: 480px;
+        font-family: {{fontFamily}};
+        color: {{textColor}};
+        background-color: white;
+        overflow: hidden;
+      }
+      .weather-dashboard {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+      }
+      .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+        position: relative;
+      }
+      .header {
+        text-align: left;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .location {
+        font-size: {{locationFontSize}}px;
+        font-weight: 500;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        width: auto;
+        white-space: nowrap;
+      }
+      .summary {
+        font-size: {{smallFontSize}}px;
+        font-weight: 300;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        width: auto;
+        white-space: nowrap;
+      }
+      .header-details {
+        margin-top: {{locationFontSize}}px;
+      }
+      .current-date, .last-update {
+        font-size: {{smallFontSize}}px;
+        color: rgba(0, 0, 0, 0.7);
+      }
+      .today-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .current-temperature {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1.5rem;
+        flex: 1;
+      }
+      .current-icon {
+        width: {{currentIconSize}}px;
+        height: {{currentIconSize}}px;
+      }
+      .current-weather {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-end;
+      }
+      .current-temp {
+        font-size: {{currentTempSize}}px;
+        font-weight: bold;
+        line-height: 1;
+      }
+      .temperature-unit {
+        font-size: {{tempUnitSize}}px;
+        margin-left: 0.2em;
+      }
+      .feels-like {
+        font-size: {{fontSize}}px;
+        color: rgba(0, 0, 0, 0.7);
+        text-align: right;
+      }
+      .data-points {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.25rem;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        margin-bottom: 0.25rem;
+      }
+      .data-point {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .data-point-icon {
+        width: {{dataPointIconSize}}px;
+        height: {{dataPointIconSize}}px;
+      }
+      .data-point-data {
+        display: flex;
+        flex-direction: column;
+      }
+      .data-point-label {
+        font-size: {{smallFontSize}}px;
+        color: rgba(0, 0, 0, 0.7);
+      }
+      .data-point-measurement {
+        font-size: {{fontSize}}px;
+        font-weight: 500;
+      }
+      .data-point-unit {
+        font-size: {{smallFontSize}}px;
+        margin-left: 0.2em;
+        color: rgba(0, 0, 0, 0.7);
+      }
+      .forecast {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        margin-top: 0.25rem;
+      }
+      .forecast-day {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .forecast-day-name {
+        font-size: {{fontSize}}px;
+        font-weight: 500;
+      }
+      .forecast-icon {
+        width: {{forecastIconSize}}px;
+        height: {{forecastIconSize}}px;
+      }
+      .forecast-temps {
+        font-size: {{fontSize}}px;
+      }
+      .high {
+        font-weight: 500;
+      }
+      .low {
+        color: rgba(0, 0, 0, 0.7);
+      }
+      .chart-container {
+        height: {{chartHeight}}px;
+        margin: 0;
+        flex-grow: 1;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="weather-dashboard">
+      <div class="header-row">
+        <div class="header">
+          <div class="location">{{location}}</div>
+          <div class="header-details">
+            <div class="current-date">{{currentDate}}</div>
+            <div class="summary">{{summary}}</div>
+            <div class="last-update">Last Updated: {{lastUpdate}}</div>
+          </div>
+        </div>
+
+        <div class="current-temperature">
+          <img class="current-icon" src="{{currentIcon}}" alt="Current Weather Icon">
+          <div class="current-weather">
+            <div class="current-temp">
+              {{currentTemp}}<span class="temperature-unit">{{temperatureUnit}}</span>
+            </div>
+            <div class="feels-like">Feels like {{feelsLike}}°</div>
+            <div class="feels-like">{{weatherMain}}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="data-points">
+        {{#each dataPoints}}
+        <div class="data-point">
+          <img class="data-point-icon" src="{{icon}}" alt="{{label}}">
+          <div class="data-point-data">
+            <div class="data-point-label">{{label}}</div>
+            <div class="data-point-measurement">
+              {{measurement}}{{#if unit}}<span class="data-point-unit">{{unit}}</span>{{/if}}
+            </div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+
+      <div class="chart-container">
+        <canvas id="hourlyTemperatureChart"></canvas>
+      </div>
+
+      {{#if showForecast}}
+      <div class="forecast">
+        {{#each daily}}
+        <div class="forecast-day">
+          <div class="forecast-day-name">{{weekday}}</div>
+          <img class="forecast-icon" src="{{icon}}" alt="Forecast Weather Icon">
+          <div class="forecast-temps">
+            <span class="high">{{maxTemp}}°</span> /
+            <span class="low">{{minTemp}}°</span>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById('hourlyTemperatureChart');
+        const ctx = canvas.getContext('2d');
+        const hourlyData = {{{hourlyData}}};
+        const temperatures = hourlyData.map(h => h.temp);
+        const precipitation = hourlyData.map(h => h.pop);
+        const labels = hourlyData.map(h => h.time);
+        const minTemp = Math.min(...temperatures);
+        let maxTemp = Math.max(...temperatures);
+        if (maxTemp - minTemp < 5) maxTemp += 5;
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              type: 'line',
+              label: 'Temperature',
+              data: temperatures,
+              borderColor: 'rgba(241, 122, 36, 0.9)',
+              borderWidth: 2,
+              pointRadius: 0,
+              fill: true,
+              tension: 0.5,
+              backgroundColor: (context) => {
+                const ctx = context.chart.ctx;
+                const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
+                gradient.addColorStop(0, 'rgba(252,204,5, 0.9)');
+                gradient.addColorStop(1, 'rgba(252,204,5, 0.01)');
+                return gradient;
+              }
+            }, {
+              type: 'bar',
+              label: 'Precipitation',
+              data: precipitation,
+              borderColor: 'rgba(26, 111, 176, 1)',
+              backgroundColor: 'rgba(26, 111, 176, 0.2)',
+              borderWidth: {
+                top: 2,
+                right: 0,
+                bottom: 0,
+                left: 0
+              },
+              yAxisID: 'y1',
+              barPercentage: 1.0,
+              categoryPercentage: 1.0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                ticks: {
+                  autoSkip: true,
+                  maxRotation: 0,
+                  color: "{{textColor}}",
+                  padding: 0
+                },
+                grid: {
+                  display: false
+                },
+                offset: true
+              },
+              y: {
+                ticks: {
+                  padding: 0,
+                  color: "{{textColor}}",
+                  callback: function(value, index, values) {
+                    if (index === values.length-1) return maxTemp + "°";
+                    else if (index === 0) return minTemp + "°";
+                    else return '';
+                  }
+                },
+                grid: { display: false },
+                suggestedMin: minTemp,
+                suggestedMax: maxTemp
+              },
+              y1: {
+                position: 'right',
+                grid: { display: false },
+                ticks: {
+                  padding: 0,
+                  color: "{{textColor}}",
+                  callback: function(value, index, values) {
+                    if (index === values.length-1) return "100%";
+                    else if (index === 0) return "0%";
+                    else return '';
+                  }
+                },
+                suggestedMin: 0,
+                suggestedMax: 100
+              }
+            },
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html> 
