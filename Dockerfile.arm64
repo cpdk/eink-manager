@@ -15,42 +15,56 @@ WORKDIR /app
 COPY api/package*.json api/
 COPY ui/package*.json ui/
 
-# Install dependencies for both projects
-WORKDIR /app/api
-RUN npm ci --target_arch=arm64 --target_platform=linux
-
+# Build UI first (this can be done on x64)
 WORKDIR /app/ui
 RUN npm ci
-
-# Copy source files
-WORKDIR /app
-COPY . .
-
-# Build UI
-WORKDIR /app/ui
+COPY ui/ ./
 RUN npm run build
 
-# Build API
+# Switch to ARM64 for API build
+FROM --platform=linux/arm64 node:18-slim AS api-builder
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libcairo2 \
+    libpango1.0-0 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app/api
+
+# Copy package files and install dependencies
+COPY api/package*.json ./
+RUN npm ci --omit=dev
+
+# Copy source and build
+COPY api/ ./
 RUN npm run build
 
-# Create the release package
-WORKDIR /app
-RUN mkdir -p /app/release/api/dist \
-    && mkdir -p /app/release/ui \
-    && mkdir -p /app/release/bin \
-    && mkdir -p /app/release/public \
-    && cp -r api/dist/* /app/release/api/dist/ \
-    && cp -r api/node_modules /app/release/api/ \
-    && cp api/package.json /app/release/api/ \
-    && cp -r dist/ui/* /app/release/ui/ \
-    && cp bin/install.sh /app/release/bin/ \
-    && cp bin/start.sh /app/release/bin/ \
-    && cp bin/install-deps.sh /app/release/bin/ \
-    && cp bin/check-system.sh /app/release/bin/ \
-    && if [ -d "public" ]; then cp -r public/* /app/release/public/; fi \
-    && chmod +x /app/release/bin/*
+# Final stage
+FROM --platform=linux/arm64 debian:bookworm-slim
+
+# Create directory structure
+WORKDIR /app/release
+RUN mkdir -p api/dist ui bin public
+
+# Copy built files from previous stages
+COPY --from=builder /app/dist/ui ./ui/
+COPY --from=api-builder /app/api/dist ./api/dist/
+COPY --from=api-builder /app/api/node_modules ./api/node_modules/
+COPY --from=api-builder /app/api/package.json ./api/
+
+# Copy scripts and other files
+COPY bin/install.sh ./bin/
+COPY bin/start.sh ./bin/
+COPY bin/install-deps.sh ./bin/
+COPY bin/check-system.sh ./bin/
+COPY public/ ./public/
+
+# Set execute permissions
+RUN chmod +x bin/*
 
 # Create the final tarball
-WORKDIR /app/release
 RUN tar czf /app/eink-release-arm64.tar.gz . 
