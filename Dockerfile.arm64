@@ -1,14 +1,12 @@
-FROM --platform=$BUILDPLATFORM node:20-slim AS builder
+FROM --platform=$BUILDPLATFORM node:18-slim AS builder
 
 # Install basic build tools
 RUN apt-get update && apt-get install -y \
     python3-full \
-    python3-venv \
     build-essential \
     pkg-config \
     git \
     make \
-    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

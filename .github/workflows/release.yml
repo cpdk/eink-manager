@@ -26,18 +26,16 @@ jobs:
           VERSION=$(node -p "require('./api/package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build for Raspberry Pi Zero W
+      - name: Build for ARM64
         run: |
           # Create a temporary directory for the build output
           mkdir -p dist
           
           # Build using Docker with specific platform
           docker buildx build \
-            --platform linux/arm/v6 \
-            --file Dockerfile.armv6 \
+            --platform linux/arm64 \
+            --file Dockerfile.arm64 \
             --output type=tar,dest=dist/build.tar \
-            --build-arg TARGETARCH=arm \
-            --build-arg TARGETVARIANT=v6 \
             .
           
           # Extract the build output
@@ -46,7 +44,7 @@ jobs:
           rm build.tar
           
           # Move the release package to the correct location
-          mv app/eink-release-armv6l.tar.gz ./eink-release-armv6l.tar.gz
+          mv app/eink-release-arm64.tar.gz ./eink-release-arm64.tar.gz
           rm -rf app
           cd ..
 
@@ -54,7 +52,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/eink-release-armv6l.tar.gz
+          files: dist/eink-release-arm64.tar.gz
           name: Release v${{ steps.package_version.outputs.version }}
           tag_name: v${{ steps.package_version.outputs.version }}
           body: |
@@ -65,17 +63,17 @@ jobs:
             # Download and extract
             mkdir eink-manager
             cd eink-manager
-            wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.package_version.outputs.version }}/eink-release-armv6l.tar.gz
-            tar xzf eink-release-armv6l.tar.gz
-            rm eink-release-armv6l.tar.gz
+            wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.package_version.outputs.version }}/eink-release-arm64.tar.gz
+            tar xzf eink-release-arm64.tar.gz
+            rm eink-release-arm64.tar.gz
             
             # Install (this will only install system dependencies, all Node.js dependencies are pre-built)
             sudo bash bin/install.sh
             ```
             
             ### System Requirements
-            - Raspberry Pi Zero W
+            - Raspberry Pi (ARM64 architecture)
             - Debian Bookworm
-            - Node.js 20.x (installed automatically)
+            - Node.js 18.x (installed automatically)
           draft: false
           prerelease: false 

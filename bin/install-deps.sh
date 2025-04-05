@@ -2,8 +2,8 @@
 
 # Install Node.js if not present
 if ! command -v node &> /dev/null; then
-    echo "Installing Node.js 20..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    echo "Installing Node.js 18..."
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
     apt-get install -y nodejs
 fi
 
