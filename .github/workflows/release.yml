@@ -1,0 +1,79 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build UI
+        working-directory: ui
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build API
+        working-directory: api
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare Release Package
+        run: |
+          mkdir -p release/api/dist
+          mkdir -p release/ui
+          mkdir -p release/bin
+          mkdir -p release/public
+          
+          # Copy API files
+          cp -r api/dist/* release/api/dist/
+          cp api/package.json release/api/
+          cp api/package-lock.json release/api/
+          
+          # Copy UI build
+          cp -r dist/ui/* release/ui/
+          
+          # Copy scripts
+          cp bin/install.sh release/bin/
+          cp bin/start.sh release/bin/
+          
+          # Copy public directory if it exists
+          if [ -d "public" ]; then
+            cp -r public/* release/public/
+          fi
+          
+          # Create the release archive
+          cd release
+          tar czf ../eink-release.tar.gz .
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: eink-release.tar.gz
+          name: Release ${{ github.ref_name }}
+          body: |
+            E-ink Display Service Release ${{ github.ref_name }}
+            
+            ### Installation
+            ```bash
+            # Download and extract
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/eink-release.tar.gz
+            tar xzf eink-release.tar.gz
+            
+            # Install
+            sudo bash bin/install.sh
+            ```
+          draft: false
+          prerelease: false 

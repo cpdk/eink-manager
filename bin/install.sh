@@ -43,24 +43,19 @@ mkdir -p $APP_DIR
 
 # Copy application files
 echo "Copying application files..."
-cp -r . $APP_DIR/
+cp -r api $APP_DIR/
+cp -r ui $APP_DIR/ui
+cp -r public $APP_DIR/
+cp -r bin $APP_DIR/
 
 # Make start script executable
 chmod +x $APP_DIR/bin/start.sh
 
-# Initial installation of dependencies
-echo "Installing API dependencies..."
+# Install production dependencies only for API
+echo "Installing API production dependencies..."
 cd $APP_DIR/api
 export NODE_OPTIONS="--max-old-space-size=512"
-npm ci
-
-echo "Installing UI dependencies and building..."
-cd $APP_DIR/ui
-npm ci
-# Increase memory limit for Angular build and disable analytics
-export NODE_OPTIONS="--max-old-space-size=512"
-npx ng analytics off
-npm run build -- --configuration production --aot --build-optimizer=false
+npm ci --only=production
 
 # Create systemd service
 echo "Creating systemd service..."

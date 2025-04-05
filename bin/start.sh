@@ -15,35 +15,26 @@ log() {
 # Change to app directory
 cd $APP_DIR
 
-# Try to update from git
-log "Attempting to update from git..."
-if git pull origin main >> "$LOG_FILE" 2>&1; then
-    log "Git pull successful"
-else
-    log "Git pull failed, continuing with existing code"
-fi
-
-# Try to update API dependencies
-log "Updating API dependencies..."
-cd $APP_DIR/api
-if npm ci >> "$LOG_FILE" 2>&1; then
-    log "API dependencies updated successfully"
-else
-    log "Failed to update API dependencies, continuing with existing modules"
-fi
-
-# Try to update UI dependencies and rebuild
-log "Updating UI dependencies..."
-cd $APP_DIR/ui
-if npm ci >> "$LOG_FILE" 2>&1; then
-    log "UI dependencies updated successfully"
-    if npm run build -- --configuration production --aot --build-optimizer=false >> "$LOG_FILE" 2>&1; then
-        log "UI built successfully"
+# Try to update from git if .git directory exists
+if [ -d ".git" ]; then
+    log "Git repository detected, attempting to update..."
+    if git pull origin main >> "$LOG_FILE" 2>&1; then
+        log "Git pull successful"
+        # Only update API dependencies if package.json has changed
+        if git diff --name-only HEAD@{1} HEAD | grep -q "api/package.json"; then
+            log "API package.json changed, updating dependencies..."
+            cd $APP_DIR/api
+            if npm ci --only=production >> "$LOG_FILE" 2>&1; then
+                log "API dependencies updated successfully"
+            else
+                log "Failed to update API dependencies, continuing with existing modules"
+            fi
+        fi
     else
-        log "UI build failed, continuing with existing build"
+        log "Git pull failed, continuing with existing code"
     fi
 else
-    log "Failed to update UI dependencies, continuing with existing modules"
+    log "No git repository found, running from release package"
 fi
 
 # Start the server
