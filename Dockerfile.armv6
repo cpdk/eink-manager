@@ -79,17 +79,17 @@ RUN npm run build
 
 # Create the release package
 WORKDIR /app
-RUN mkdir -p /app/eink-release/api/dist \
-    && mkdir -p /app/eink-release/ui \
-    && mkdir -p /app/eink-release/bin \
-    && mkdir -p /app/eink-release/public \
-    && cp -r api/dist/* /app/eink-release/api/dist/ \
-    && cp -r api/node_modules /app/eink-release/api/ \
-    && cp api/package.json /app/eink-release/api/ \
-    && cp -r dist/ui/* /app/eink-release/ui/ \
-    && cp bin/install.sh /app/eink-release/bin/ \
-    && cp bin/start.sh /app/eink-release/bin/ \
-    && if [ -d "public" ]; then cp -r public/* /app/eink-release/public/; fi
+RUN mkdir -p /app/release/api/dist \
+    && mkdir -p /app/release/ui \
+    && mkdir -p /app/release/bin \
+    && mkdir -p /app/release/public \
+    && cp -r api/dist/* /app/release/api/dist/ \
+    && cp -r api/node_modules /app/release/api/ \
+    && cp api/package.json /app/release/api/ \
+    && cp -r dist/ui/* /app/release/ui/ \
+    && cp bin/install.sh /app/release/bin/ \
+    && cp bin/start.sh /app/release/bin/ \
+    && if [ -d "public" ]; then cp -r public/* /app/release/public/; fi
 
 # Create a dependencies installation script
 RUN echo '#!/bin/bash\n\
@@ -113,12 +113,12 @@ apt-get install -y \
 # Set up Python virtual environment\n\
 python3 -m venv /opt/eink-venv\n\
 /opt/eink-venv/bin/pip install --no-cache-dir RPi.GPIO spidev pillow numpy\n\
-' > /app/eink-release/bin/install-deps.sh \
-    && chmod +x /app/eink-release/bin/install-deps.sh
+' > /app/release/bin/install-deps.sh \
+    && chmod +x /app/release/bin/install-deps.sh
 
 # Update install.sh to use install-deps.sh
-RUN sed -i '1a\\\n# Install system dependencies\nbash "$(dirname "$0")/install-deps.sh"' /app/eink-release/bin/install.sh
+RUN sed -i '1a\\\n# Install system dependencies\nbash "$(dirname "$0")/install-deps.sh"' /app/release/bin/install.sh
 
 # Create the final tarball
-WORKDIR /app/eink-release
+WORKDIR /app/release
 RUN tar czf /app/eink-release-armv6l.tar.gz . 

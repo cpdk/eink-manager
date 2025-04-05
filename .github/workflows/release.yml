@@ -43,8 +43,9 @@ jobs:
           tar xf build.tar
           rm build.tar
           
-          # Create the final release package
-          tar czf eink-release-armv6l.tar.gz app/eink-release-armv6l.tar.gz
+          # Move the release package to the correct location
+          mv app/eink-release-armv6l.tar.gz ./eink-release-armv6l.tar.gz
+          rm -rf app
           cd ..
 
       - name: Create Release
@@ -60,8 +61,11 @@ jobs:
             ### Installation
             ```bash
             # Download and extract
+            mkdir eink-manager
+            cd eink-manager
             wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.package_version.outputs.version }}/eink-release-armv6l.tar.gz
             tar xzf eink-release-armv6l.tar.gz
+            rm eink-release-armv6l.tar.gz
             
             # Install
             sudo bash bin/install.sh
