@@ -22,7 +22,7 @@ COPY ui/ ./
 RUN npm run build
 
 # Switch to ARM64 for API build
-FROM --platform=$TARGETPLATFORM node:18-slim AS api-builder
+FROM node:18-slim AS api-builder
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y \
@@ -44,7 +44,7 @@ COPY api/ ./
 RUN npm run build
 
 # Final stage
-FROM --platform=$TARGETPLATFORM debian:bookworm-slim
+FROM debian:bookworm-slim
 
 # Create directory structure
 WORKDIR /app/release
@@ -62,8 +62,8 @@ COPY bin/start.sh ./bin/
 COPY bin/install-deps.sh ./bin/
 COPY bin/check-system.sh ./bin/
 
-# Copy public directory if it exists
-COPY public/. ./public/ 2>/dev/null || true
+# Copy public directory if it exists (ignore errors)
+COPY public ./public/ || true
 
 # Set execute permissions
 RUN chmod +x bin/*
