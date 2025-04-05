@@ -31,11 +31,13 @@ jobs:
           # Create a temporary directory for the build output
           mkdir -p dist
           
-          # Build using Docker
+          # Build using Docker with specific platform
           docker buildx build \
             --platform linux/arm/v6 \
             --file Dockerfile.armv6 \
             --output type=tar,dest=dist/build.tar \
+            --build-arg TARGETARCH=arm \
+            --build-arg TARGETVARIANT=v6 \
             .
           
           # Extract the build output
@@ -67,8 +69,13 @@ jobs:
             tar xzf eink-release-armv6l.tar.gz
             rm eink-release-armv6l.tar.gz
             
-            # Install
+            # Install (this will only install system dependencies, all Node.js dependencies are pre-built)
             sudo bash bin/install.sh
             ```
+            
+            ### System Requirements
+            - Raspberry Pi Zero W
+            - Debian Bookworm
+            - Node.js 20.x (installed automatically)
           draft: false
           prerelease: false 
