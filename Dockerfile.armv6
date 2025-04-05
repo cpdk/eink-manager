@@ -1,0 +1,98 @@
+FROM node:20-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    build-essential \
+    pkg-config \
+    libpixman-1-dev \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    git \
+    gcc \
+    g++ \
+    make \
+    python3-pip \
+    python3-rpi.gpio \
+    python3-spidev \
+    python3-numpy \
+    libopenjp2-7 \
+    libtiff5 \
+    libatlas-base-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies for E-ink
+RUN pip3 install --no-cache-dir \
+    RPi.GPIO \
+    spidev \
+    pillow \
+    numpy
+
+# Set up for arm cross compilation
+ENV ARCH=arm
+ENV CROSS_COMPILE=arm-linux-gnueabihf-
+
+WORKDIR /app
+
+# Copy package files
+COPY api/package*.json api/
+COPY ui/package*.json ui/
+
+# Install dependencies for both projects
+WORKDIR /app/api
+RUN npm ci --target_arch=arm --target_platform=linux
+
+WORKDIR /app/ui
+RUN npm ci
+
+# Copy source files
+WORKDIR /app
+COPY . .
+
+# Build UI
+WORKDIR /app/ui
+RUN npm run build
+
+# Build API
+WORKDIR /app/api
+RUN npm run build
+
+# Create the release package
+WORKDIR /app
+RUN mkdir -p release/api/dist \
+    && mkdir -p release/ui \
+    && mkdir -p release/bin \
+    && mkdir -p release/public \
+    && cp -r api/dist/* release/api/dist/ \
+    && cp -r api/node_modules release/api/ \
+    && cp api/package.json release/api/ \
+    && cp -r dist/ui/* release/ui/ \
+    && cp bin/install.sh release/bin/ \
+    && cp bin/start.sh release/bin/ \
+    && if [ -d "public" ]; then cp -r public/* release/public/; fi
+
+# Create a dependencies installation script
+RUN echo '#!/bin/bash\n\
+apt-get update\n\
+apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-rpi.gpio \
+    python3-spidev \
+    python3-numpy \
+    libopenjp2-7 \
+    libtiff5 \
+    libatlas-base-dev\n\
+pip3 install --no-cache-dir RPi.GPIO spidev pillow numpy\n\
+' > release/bin/install-deps.sh \
+    && chmod +x release/bin/install-deps.sh
+
+# Update install.sh to use install-deps.sh
+RUN sed -i '1a\\\n# Install system dependencies\nbash "$(dirname "$0")/install-deps.sh"' release/bin/install.sh
+
+# Create the final tarball
+WORKDIR /app/release
+RUN tar czf /app/eink-release-armv6l.tar.gz . 

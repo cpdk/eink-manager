@@ -14,26 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Cache UI dependencies
-        uses: actions/cache@v3
-        with:
-          path: ui/node_modules
-          key: ${{ runner.os }}-ui-${{ hashFiles('ui/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-ui-
-
-      - name: Cache API dependencies
-        uses: actions/cache@v3
-        with:
-          path: api/node_modules
-          key: ${{ runner.os }}-api-${{ hashFiles('api/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-api-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Get version
         id: package_version
@@ -41,51 +26,19 @@ jobs:
           VERSION=$(node -p "require('./api/package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build UI
-        working-directory: ui
+      - name: Build for Raspberry Pi Zero W
         run: |
-          npm ci
-          npm run build
-
-      - name: Build API
-        working-directory: api
-        run: |
-          npm ci
-          npm run build
-
-      - name: Prepare Release Package
-        run: |
-          mkdir -p release/api/dist
-          mkdir -p release/ui
-          mkdir -p release/bin
-          mkdir -p release/public
-          
-          # Copy API files
-          cp -r api/dist/* release/api/dist/
-          cp api/package.json release/api/
-          cp api/package-lock.json release/api/
-          
-          # Copy UI build
-          cp -r dist/ui/* release/ui/
-          
-          # Copy scripts
-          cp bin/install.sh release/bin/
-          cp bin/start.sh release/bin/
-          
-          # Copy public directory if it exists
-          if [ -d "public" ]; then
-            cp -r public/* release/public/
-          fi
-          
-          # Create the release archive
-          cd release
-          tar czf ../eink-release.tar.gz .
+          docker buildx build \
+            --platform linux/arm/v6 \
+            --file Dockerfile.armv6 \
+            --output type=local,dest=. \
+            .
 
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          files: eink-release.tar.gz
+          files: eink-release-armv6l.tar.gz
           name: Release v${{ steps.package_version.outputs.version }}
           tag_name: v${{ steps.package_version.outputs.version }}
           body: |
@@ -94,8 +47,8 @@ jobs:
             ### Installation
             ```bash
             # Download and extract
-            wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.package_version.outputs.version }}/eink-release.tar.gz
-            tar xzf eink-release.tar.gz
+            wget https://github.com/${{ github.repository }}/releases/download/v${{ steps.package_version.outputs.version }}/eink-release-armv6l.tar.gz
+            tar xzf eink-release-armv6l.tar.gz
             
             # Install
             sudo bash bin/install.sh
