@@ -28,17 +28,30 @@ jobs:
 
       - name: Build for Raspberry Pi Zero W
         run: |
+          # Create a temporary directory for the build output
+          mkdir -p dist
+          
+          # Build using Docker
           docker buildx build \
             --platform linux/arm/v6 \
             --file Dockerfile.armv6 \
-            --output type=local,dest=. \
+            --output type=tar,dest=dist/build.tar \
             .
+          
+          # Extract the build output
+          cd dist
+          tar xf build.tar
+          rm build.tar
+          
+          # Create the final release package
+          tar czf eink-release-armv6l.tar.gz app/eink-release-armv6l.tar.gz
+          cd ..
 
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          files: eink-release-armv6l.tar.gz
+          files: dist/eink-release-armv6l.tar.gz
           name: Release v${{ steps.package_version.outputs.version }}
           tag_name: v${{ steps.package_version.outputs.version }}
           body: |
