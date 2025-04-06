@@ -62,9 +62,6 @@ COPY bin/start.sh ./bin/
 COPY bin/install-deps.sh ./bin/
 COPY bin/check-system.sh ./bin/
 
-# Copy public directory if it exists (ignore errors)
-COPY public ./public/ || true
-
 # Set execute permissions
 RUN chmod +x bin/*
 
